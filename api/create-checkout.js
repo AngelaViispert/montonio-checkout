@@ -14,11 +14,16 @@ export default async function handler(req, res) {
     items
   } = req.body;
 
+  // 🔐 Võtab API võtmed keskkonnamuutujatest
+  const accessKey = process.env.ACCESS_KEY;
+  const secretKey = process.env.SECRET_KEY;
+  const bearerToken = `${accessKey}:${secretKey}`;
+
   try {
     const response = await fetch("https://api.sandbox.montonio.com/checkout", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.MONTONIO_API_KEY}`,
+        "Authorization": `Bearer ${bearerToken}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
