@@ -1,4 +1,5 @@
-// File: /api/create-checkout.js (või .ts kui TypeScript)
+// File: /api/create-checkout.js
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -28,9 +29,9 @@ export default async function handler(req, res) {
       ? "https://api.montonio.com/checkout"
       : "https://api.sandbox.montonio.com/checkout";
 
-    const apiKey = process.env.MONTONIO_SECRET_KEY;
+    const apiKey = process.env.MONTONIO_ACCESS_KEY;
     if (!apiKey) {
-      throw new Error("Montonio API võti puudub.");
+      throw new Error("Montonio API võti (ACCESS_KEY) puudub.");
     }
 
     const customerData = {
@@ -67,18 +68,19 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!data.checkout_url) {
+    if (!response.ok || !data.checkout_url) {
       console.error("Montonio API error:", data);
       return res.status(500).json({
-        error: "Montonio makselingi loomine ebaõnnestus. Palun proovige hiljem uuesti."
+        error: "Montonio makselingi loomine ebaõnnestus. Palun kontrollige API võtit ja andmeid."
       });
     }
 
     return res.status(200).json({ checkout_url: data.checkout_url });
+
   } catch (error) {
     console.error("Montonio API error:", error);
     return res.status(500).json({
-      error: "Montonio makselingi loomine ebaõnnestus. Palun proovige hiljem uuesti."
+      error: "Tekkis viga Montonio makselingi loomisel. Kontrolli API võtit ja sisendeid."
     });
   }
 }
