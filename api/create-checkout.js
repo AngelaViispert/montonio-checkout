@@ -1,6 +1,8 @@
 // File: /api/create-checkout.js
 
 export default async function handler(req, res) {
+  console.log("Montonio võti:", process.env.MONTONIO_ACCESS_KEY);
+
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -80,6 +82,11 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Montonio API error:", error);
     return res.status(500).json({
+      error: "Tekkis viga Montonio makselingi loomisel. Kontrolli API võtit ja sisendeid."
+    });
+  }
+}
+
       error: "Tekkis viga Montonio makselingi loomisel. Kontrolli API võtit ja sisendeid."
     });
   }
