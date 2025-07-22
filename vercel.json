@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/create-checkout.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/create-checkout",
+      "methods": ["POST"],
+      "dest": "/api/create-checkout.js"
+    }
+  ]
+}
