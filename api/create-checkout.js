@@ -1,3 +1,4 @@
+// File: /api/create-checkout.js (või .ts kui TypeScript)
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -16,11 +17,40 @@ export default async function handler(req, res) {
     cancelUrl
   } = req.body;
 
+  if (!amount || !orderId || !email || !items || items.length === 0) {
+    return res.status(400).json({
+      error: "Puuduvad vajalikud andmed. Kontrollige summat, tellimuse ID-d, e-posti aadressi ja tellimuse esemeid."
+    });
+  }
+
   try {
-    const response = await fetch("https://api.sandbox.montonio.com/checkout", {
+    const apiUrl = process.env.NODE_ENV === 'production'
+      ? "https://api.montonio.com/checkout"
+      : "https://api.sandbox.montonio.com/checkout";
+
+    const apiKey = process.env.MONTONIO_SECRET_KEY;
+    if (!apiKey) {
+      throw new Error("Montonio API võti puudub.");
+    }
+
+    const customerData = {
+      email,
+      phone,
+      first_name: firstName,
+      last_name: lastName
+    };
+
+    const formattedItems = items.map(item => ({
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+      metadata: item.metadata || {}
+    }));
+
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.MONTONIO_SECRET_KEY}`,
+        "Authorization": `Bearer ${apiKey}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -29,21 +59,26 @@ export default async function handler(req, res) {
         return_url: returnUrl || "https://puitunistus.com/edu",
         cancel_url: cancelUrl || "https://puitunistus.com/katkestatud",
         payment_method: "banklink",
-        customer: {
-          email,
-          phone,
-          first_name: firstName,
-          last_name: lastName
-        },
+        customer: customerData,
         reference: orderId,
-        items
+        items: formattedItems
       })
     });
 
     const data = await response.json();
+
+    if (!data.checkout_url) {
+      console.error("Montonio API error:", data);
+      return res.status(500).json({
+        error: "Montonio makselingi loomine ebaõnnestus. Palun proovige hiljem uuesti."
+      });
+    }
+
     return res.status(200).json({ checkout_url: data.checkout_url });
   } catch (error) {
     console.error("Montonio API error:", error);
-    return res.status(500).json({ error: "Montonio makselingi loomine ebaõnnestus." });
+    return res.status(500).json({
+      error: "Montonio makselingi loomine ebaõnnestus. Palun proovige hiljem uuesti."
+    });
   }
 }
