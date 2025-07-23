@@ -33,11 +33,13 @@ export default async function handler(req, res) {
       : "https://api.sandbox.montonio.com/checkout";
 
     const apiKey = process.env.MONTONIO_ACCESS_KEY;
+
     console.log("🧪 NODE_ENV:", process.env.NODE_ENV);
     console.log("🔑 API võti olemas:", !!apiKey);
+    console.log("🔑 API võti väärtus (ajutiselt):", apiKey); // Eemalda hiljem!
 
     if (!apiKey) {
-      return res.status(500).json({ error: "API võti puudub" });
+      return res.status(500).json({ error: "API võti puudub (env muutujas MONTONIO_ACCESS_KEY)" });
     }
 
     const customerData = {
@@ -91,6 +93,13 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("💥 Server error:", error);
+    return res.status(500).json({
+      error: "Viga makselingi loomisel.",
+      details: error.message
+    });
+  }
+}
+
     return res.status(500).json({
       error: "Viga makselingi loomisel.",
       details: error.message
